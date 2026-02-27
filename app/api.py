@@ -1,0 +1,266 @@
+import asyncio
+import pathlib
+import time
+import json
+import logging
+from pathlib import Path
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+
+from app.ant import Metrics
+from contextlib import asynccontextmanager
+
+from app.core import setup_logging
+from app.model import (
+    IntervalModel,
+    IntervalProgressModel,
+    MetricsModel,
+    MetricsSettingsModel,
+    SensorModel,
+)
+from app.workout import Timer
+
+
+setup_logging()
+
+logger = logging.getLogger("app.api")
+
+shutdown_event = asyncio.Event()  # shared shutdown flag
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ---- startup ----
+    logging.info("Starting ANT+ Metrics Service...")
+    app.state.metrics = Metrics(
+        metrics_settings=MetricsSettingsModel(
+            age=45,
+            speed_wheel_circumference_m=0.141,
+            distance_wheel_circumference_m=0.141,
+        )
+    )
+
+    app.state.workout = []
+    app.state.timer = Timer(app.state.workout)
+
+    yield
+
+    # ---- shutdown ----
+    logging.info("Shutting down ANT+ Metrics Service...")
+    shutdown_event.set()  # signal shutdown to generators
+    if app.state.metrics:
+        await asyncio.to_thread(app.state.metrics.stop)
+
+
+app = FastAPI(title="ANT+ Metrics Service", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or your frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Path to frontend build folder inside app/
+build_path = pathlib.Path(__file__).parent / "dist"
+if build_path.exists() and build_path.is_dir():
+
+# Serve "assets" folder
+    app.mount("/assets", StaticFiles(directory=build_path / "assets"), name="assets")
+
+
+    # Serve index.html at root
+    @app.get("/")
+    def root():
+        return FileResponse(build_path / "index.html")
+else:
+    logger.warning("Frontend build folder not found at %s, skipping frontend mount.", build_path)
+
+
+# -------------------------
+# Metrics endpoints
+# -------------------------
+@app.post("/metrics/start")
+def start_metrics():
+    max_retries = 3
+    for attempt in range(1, max_retries + 1):
+        try:
+            app.state.metrics.start()
+            return {"message": "Metrics collection started"}
+        except Exception as e:
+            logging.warning(f"Failed to start metrics (attempt {attempt}): {str(e)}")
+            time.sleep(0.5)  # brief pause before retrying
+
+    # If all retries failed, raise HTTPException
+    raise HTTPException(
+        status_code=500, detail=f"Failed to start metrics after {max_retries} attempts"
+    )
+
+
+@app.post("/metrics/stop")
+def stop_metrics():
+    try:
+        app.state.metrics.stop()
+        return {"message": "Metrics collection stopped"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to stop metrics: {str(e)}")
+
+
+@app.post("/metrics/settings")
+def update_metrics_settings(payload: MetricsSettingsModel):
+    try:
+        app.state.metrics.set_metrics_settings(payload)
+        return {"message": f"Metrics settings updated to {payload}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update: {str(e)}")
+
+
+@app.get("/metrics/settings", response_model=MetricsSettingsModel)
+def get_metrics_settings():
+    try:
+        settings = app.state.metrics.get_metrics_settings()
+        return settings
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get settings: {str(e)}")
+
+
+@app.get("/metrics", response_model=MetricsModel)
+def get_metrics():
+    try:
+        metrics = app.state.metrics.get_metrics()
+        return metrics
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get metrics: {str(e)}")
+
+
+@app.get("/metrics/devices", response_model=list[SensorModel])
+def get_metrics_devices():
+    try:
+        devices = app.state.metrics.get_devices()
+        return [SensorModel(**d) for d in devices]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get devices: {str(e)}")
+
+
+async def metrics_event_generator():
+    while not shutdown_event.is_set():
+        try:
+            metrics: MetricsModel = await asyncio.to_thread(
+                app.state.metrics.get_metrics
+            )
+
+            # Convert to JSON string (Pydantic handles datetime automatically)
+            data = metrics.model_dump_json()
+
+            # SSE format: `data: <payload>\n\n`
+            yield f"data: {data}\n\n"
+
+            # Send updates every second (adjust as needed)
+            await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            # Client disconnected
+            break
+        except Exception as error:
+            logger.error("Error in metrics_event_generator", exc_info=True)
+            # Send error to client
+            yield f"data: {json.dumps({'error': str(error), 'type': type(error).__name__, 'cause': repr(error.__cause__)})}\n\n"
+            await asyncio.sleep(1)
+
+
+@app.get("/metrics/stream")
+async def stream_metrics():
+    return StreamingResponse(metrics_event_generator(), media_type="text/event-stream")
+
+
+async def device_event_generator():
+    while not shutdown_event.is_set():
+        try:
+            # Get current devices from app state
+            # devices = app.state.metrics.get_devices()  # returns list of dicts
+            devices = await asyncio.to_thread(app.state.metrics.get_devices)
+            yield f"data: {json.dumps(devices)}\n\n"
+            await asyncio.sleep(1)  # adjust frequency as needed
+        except asyncio.CancelledError:
+            # client disconnected
+            break
+        except Exception as error:
+            yield f"data: {json.dumps({'error': str(error), 'type': type(error).__name__, 'cause': repr(error.__cause__)})}\n\n"
+            await asyncio.sleep(1)
+
+
+@app.get("/metrics/devices/stream")
+async def stream_devices():
+    return StreamingResponse(device_event_generator(), media_type="text/event-stream")
+
+
+@app.get("/workout", response_model=list[IntervalModel])
+def get_workout():
+    return app.state.workout
+
+
+@app.post("/workout", response_model=list[IntervalModel])
+def set_workout(intervals: list[IntervalModel]):
+    timer: Timer = app.state.timer
+
+    if timer.is_running():
+        raise HTTPException(
+            status_code=400, detail="Cannot update workout while the timer is running"
+        )
+
+    app.state.workout = intervals
+    return app.state.workout
+
+
+@app.post("/workout/start")
+def start_workout():
+    try:
+        timer: Timer = app.state.timer
+        timer.set_intervak(app.state.workout)
+        timer.start()
+        return {"message": "Workout started"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start: {str(e)}")
+
+
+@app.post("/workout/stop")
+def stop_workout():
+    try:
+        timer: Timer = app.state.timer
+        timer.stop()
+        return {"message": "Workout stopped"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to stop pdate: {str(e)}")
+
+
+async def workout_event_generator():
+    timer: Timer = app.state.timer
+
+    while True:
+        try:
+            progress: IntervalProgressModel = await asyncio.to_thread(
+                timer.current_interval
+            )
+            if progress:
+                data = progress.model_dump_json()
+                yield f"data: {data}\n\n"
+            else:
+                yield f"data: {json.dumps({})}\n\n"
+
+            await asyncio.sleep(0.5)  # send updates twice per second
+        except asyncio.CancelledError:
+            break
+        except Exception as error:
+            logger.error("Error in workout_event_generator", exc_info=True)
+            yield f"data: {json.dumps({'error': str(error), 'type': type(error).__name__, 'cause': repr(error.__cause__)})}\n\n"
+            await asyncio.sleep(1)
+
+
+@app.get("/workout/stream")
+async def stream_workout():
+    """
+    Stream live workout interval progress using SSE.
+    """
+    return StreamingResponse(workout_event_generator(), media_type="text/event-stream")
