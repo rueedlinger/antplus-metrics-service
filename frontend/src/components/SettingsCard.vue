@@ -124,10 +124,7 @@ async function submitSettings() {
       }
     });
 
-    const res = await axios.post(
-      API.baseUrl + API.endpoints.updateSettings,
-      payload
-    );
+    const res = await axios.post(API.baseUrl + API.endpoints.updateSettings, payload);
 
     // If backend returns updated settings use them,
     // otherwise keep what we sent
@@ -140,7 +137,6 @@ async function submitSettings() {
       title: 'Settings',
       type: ToastType.SUCCESS,
     });
-
   } catch (err) {
     emit('show-toast', {
       message:

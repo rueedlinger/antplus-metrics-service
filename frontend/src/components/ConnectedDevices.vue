@@ -22,7 +22,9 @@
           <tr v-for="device in devices" :key="device.id">
             <td class="px-2 py-1 border-b border-dashed border-black/30">{{ device.name }}</td>
             <td class="px-2 py-1 border-b border-dashed border-black/30">{{ device.device_id }}</td>
-            <td class="px-2 py-1 border-b border-dashed border-black/30">{{ device.device_type }}</td>
+            <td class="px-2 py-1 border-b border-dashed border-black/30">
+              {{ device.device_type }}
+            </td>
           </tr>
         </tbody>
       </table>

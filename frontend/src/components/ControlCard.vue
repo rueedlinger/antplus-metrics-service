@@ -224,7 +224,7 @@ function formatTime(value) {
 
 /* ================= WATCH LAST 5 SECONDS ================= */
 let lastBeepSecond = null;
-let numberOfBeeps = 3
+let numberOfBeeps = 3;
 
 watch(
   () => workout.time_remaining,

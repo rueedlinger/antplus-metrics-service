@@ -3,7 +3,6 @@ import pathlib
 import time
 import json
 import logging
-from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -67,17 +66,17 @@ app.add_middleware(
 # Path to frontend build folder inside app/
 build_path = pathlib.Path(__file__).parent / "dist"
 if build_path.exists() and build_path.is_dir():
-
-# Serve "assets" folder
+    # Serve "assets" folder
     app.mount("/assets", StaticFiles(directory=build_path / "assets"), name="assets")
-
 
     # Serve index.html at root
     @app.get("/")
     def root():
         return FileResponse(build_path / "index.html")
 else:
-    logger.warning("Frontend build folder not found at %s, skipping frontend mount.", build_path)
+    logger.warning(
+        "Frontend build folder not found at %s, skipping frontend mount.", build_path
+    )
 
 
 # -------------------------

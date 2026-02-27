@@ -79,6 +79,28 @@
 
       <!-- CHART TAB -->
       <div v-else-if="activeTab === 'chart'">
+        <div class="overflow-x-auto rounded-lg shadow-inner">
+          <table
+            class="table-auto text-sm border-separate border-spacing-0 bg-white/30 ml-0 mr-auto"
+          >
+            <tbody>
+              <tr class="hover:bg-gray-50 transition">
+                <td class="px-2 py-1 text-left border-b border-dashed border-black/30">
+                  Distance (m):
+                </td>
+                <td class="px-2 py-1 text-left border-b border-dashed border-black/30">
+                  {{ metrics.ma_distance ?? '—' }}
+                </td>
+
+                <td class="px-2 py-1 text-left border-b border-dashed border-black/30">Zone:</td>
+                <td class="px-2 py-1 text-left border-b border-dashed border-black/30">
+                  {{ metrics.ma_zone_name ?? '—' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             v-for="group in chartGroups"
@@ -221,7 +243,7 @@ function getChartDataForGroup(group) {
     datasets.push({
       label: `${friendlyLabels[key] ?? key} (${getMetricUnit(key)})`,
       data: history.value.map((h) => (h[key] != null ? Math.round(h[key]) : null)),
-      borderColor: '#7c3aed',      
+      borderColor: '#7c3aed',
       tension: 0.3,
     });
     datasets.push({
