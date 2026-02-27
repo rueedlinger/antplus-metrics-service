@@ -122,7 +122,7 @@
       </div>
     </div>
     <!-- Show warning when NOT connected -->
-    <div v-else class="p-4 bg-red-100 text-red-600 rounded-lg">⚠️ Not connected</div>
+    <div v-else class="p-4 bg-red-100 text-red-600 rounded-lg">Not connected</div>
   </div>
 </template>
 
