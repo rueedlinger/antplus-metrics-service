@@ -239,6 +239,7 @@ watch(
 function getChartDataForGroup(group) {
   const labels = history.value.map((_, i) => i + 1);
   const datasets = [];
+  // eslint-disable-next-line no-unused-vars
   group.metrics.forEach((key, idx) => {
     datasets.push({
       label: `${friendlyLabels[key] ?? key} (${getMetricUnit(key)})`,
