@@ -15,8 +15,8 @@ tbd
 
 ## Test INstall Script with Docker
 ```bash
-docker build -t app:latest .
-docker run -it --rm -p 8000:8000 antplus-metrics bash
+docker build --build-arg CACHE_BUST=$(date +%s) -t app:latest .
+docker run -it --rm -p 8000:8000 app:latest bash
 ```
 
 Then test the install script
@@ -27,8 +27,8 @@ Then test the install script
 Or directly with
 
 ```bash
-docker build -t app:latest .
-docker run -it --rm -p 8000:8000 antplus-metrics /app/install
+docker build --build-arg CACHE_BUST=$(date +%s) -t app:latest .
+docker run -it --rm -p 8000:8000 app:latest /app/install
 ```
 
 

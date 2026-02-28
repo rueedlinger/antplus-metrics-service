@@ -5,8 +5,8 @@ set -o pipefail
 # -----------------------
 # Step 0: Clone repository
 # -----------------------
-REPO_URL="https://github.com/rueedlinger/antplus-metrics"
 REPO_DIR="antplus-metrics"
+REPO_URL="https://github.com/rueedlinger/${REPO_DIR}"
 
 echo "📥 Cloning repository..."
 if [ ! -d "$REPO_DIR" ]; then
@@ -73,15 +73,6 @@ cp -r frontend/dist/* app/dist/
 echo "✅ Backend setup complete."
 
 # -----------------------
-# Step 3: Create start script
+# Step 3: Finish
 # -----------------------
-START_SCRIPT="start.sh"
-cat > "$START_SCRIPT" << 'EOF'
-#!/usr/bin/env bash
-echo "🚀 Starting server on port 8000..."
-uv run uvicorn app.api:app --reload --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 1  --log-config logging.conf
-EOF
-
-chmod +x "$START_SCRIPT"
-echo "✅ Start script created: $START_SCRIPT"
-echo "You can now run the server with ./$START_SCRIPT"
+echo "✅ Finished"

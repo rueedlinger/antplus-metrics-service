@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y curl git build-essential \
     && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-RUN ls
-
 # Set working directory
 WORKDIR /app
 
-# Copy install script
-COPY install.sh .
-RUN chmod +x install.sh
+# Force rebuild from here down
+ARG CACHE_BUST
+RUN echo "Cache bust value: ${CACHE_BUST}"
 
+# Copy install script
+ADD install.sh .
+RUN chmod +x install.sh 
+#RUN chmod +x install.sh && ./install.sh --dry-run
