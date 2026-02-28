@@ -216,12 +216,25 @@ const footerValues = computed(() => {
 
 // ---------------- Chart ----------------
 const MAX_POINTS = 60;
-const metricKeys = ['power', 'speed', 'cadence', 'heart_rate', 'heart_rate_percent', 'distance', 'zone_name'];
+const metricKeys = [
+  'power',
+  'speed',
+  'cadence',
+  'heart_rate',
+  'heart_rate_percent',
+  'distance',
+  'zone_name',
+];
 const chartGroups = [
   { id: 'power', label: 'Power', metrics: ['power'], onlyMA: false },
   { id: 'speed', label: 'Speed', metrics: ['speed'], onlyMA: false },
   { id: 'cadence', label: 'Cadence', metrics: ['cadence'], onlyMA: false },
-  { id: 'heart_rate', label: 'Heart Rate', metrics: ['heart_rate', 'heart_rate_percent'], onlyMA: false },
+  {
+    id: 'heart_rate',
+    label: 'Heart Rate',
+    metrics: ['heart_rate', 'heart_rate_percent'],
+    onlyMA: false,
+  },
   { id: 'distance', label: 'Distance', metrics: ['distance'], onlyMA: true },
   { id: 'zone', label: 'Zone', metrics: ['zone_name'], onlyMA: false },
 ];
@@ -240,12 +253,11 @@ watch(
   metrics,
   (newMetrics) => {
     if (!newMetrics) return;
-    const snapshot = {};       
-    metricKeys.forEach((key) => {    
-      
+    const snapshot = {};
+    metricKeys.forEach((key) => {
       if (key === 'zone_name') {
         snapshot[key] = zoneMap[newMetrics[key]] ?? -1; // map zone names to numbers
-         
+
         snapshot[`ma_${key}`] = zoneMap[newMetrics[`ma_${key}`]] ?? -1;
       } else {
         snapshot[key] = newMetrics[key] ?? null;
@@ -253,7 +265,6 @@ watch(
       }
 
       //console.log(snapshot);
-      
     });
     history.value.push(snapshot);
     if (history.value.length > MAX_POINTS) history.value.shift();
