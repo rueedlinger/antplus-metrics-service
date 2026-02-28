@@ -203,12 +203,13 @@ const footerValues = computed(() => {
 
 // ---------------- Chart ----------------
 const MAX_POINTS = 60;
-const metricKeys = ['power', 'speed', 'cadence', 'heart_rate', 'heart_rate_percent'];
+const metricKeys = ['power', 'speed', 'cadence', 'heart_rate', 'heart_rate_percent', 'distance'];
 const chartGroups = [
-  { id: 'power', label: 'Power', metrics: ['power'] },
-  { id: 'speed', label: 'Speed', metrics: ['speed'] },
-  { id: 'cadence', label: 'Cadence', metrics: ['cadence'] },
-  { id: 'heart_rate', label: 'Heart Rate', metrics: ['heart_rate', 'heart_rate_percent'] },
+  { id: 'power', label: 'Power', metrics: ['power'], onlyMA: false },
+  { id: 'speed', label: 'Speed', metrics: ['speed'], onlyMA: false },
+  { id: 'cadence', label: 'Cadence', metrics: ['cadence'], onlyMA: false },
+  { id: 'heart_rate', label: 'Heart Rate', metrics: ['heart_rate', 'heart_rate_percent'], onlyMA: false },
+  { id: 'distance', label: 'Distance', metrics: ['distance'], onlyMA: true },
 ];
 
 const history = ref([]);
@@ -239,21 +240,25 @@ watch(
 function getChartDataForGroup(group) {
   const labels = history.value.map((_, i) => i + 1);
   const datasets = [];
-  // eslint-disable-next-line no-unused-vars
-  group.metrics.forEach((key, idx) => {
-    datasets.push({
-      label: `${friendlyLabels[key] ?? key} (${getMetricUnit(key)})`,
-      data: history.value.map((h) => (h[key] != null ? Math.round(h[key]) : null)),
-      borderColor: '#7c3aed',
-      tension: 0.3,
-    });
+
+  group.metrics.forEach((key) => {
+    if (!group.onlyMA) {
+      datasets.push({
+        label: `${friendlyLabels[key] ?? key} (${getMetricUnit(key)})`,
+        data: history.value.map((h) => (h[key] != null ? Math.round(h[key]) : null)),
+        borderColor: '#7c3aed', // raw metric color
+        tension: 0.3,
+      });
+    }
+
     datasets.push({
       label: `MA ${friendlyLabels[key] ?? key} (${getMetricUnit(key)})`,
       data: history.value.map((h) => (h[`ma_${key}`] != null ? Math.round(h[`ma_${key}`]) : null)),
-      borderColor: '#EC4899',
+      borderColor: '#EC4899', // MA color
       tension: 0.3,
     });
   });
+
   return { labels, datasets };
 }
 
