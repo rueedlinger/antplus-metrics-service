@@ -61,7 +61,7 @@
                   <span v-else>{{ value ?? '—' }}</span>
                   {{ getMetricUnit(key) }}
                 </td>
-                <td class="px-2 py-1">
+                <td class="px-2 py-1 border-b border-dashed border-black/30">
                   <span v-if="key === 'zone_name' && typeof getMovingAverage(key) === 'number'">{{
                     zoneReverseMap[getMovingAverage(key)] ?? getMovingAverage(key)
                   }}</span>
