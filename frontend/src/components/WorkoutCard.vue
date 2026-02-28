@@ -1,84 +1,85 @@
 <template>
-  <div class="backdrop-blur-lg bg-white/80 rounded-2xl shadow-xl p-6 text-center space-y-6">
+  <div class="backdrop-blur-lg bg-white/80 rounded-2xl shadow-xl p-6 space-y-6">
     <h2 class="text-2xl font-semibold text-center text-black">Workout Intervals</h2>
 
     <!-- No intervals -->
     <div v-if="intervals.length === 0" class="text-gray-500 text-center">No intervals yet.</div>
 
-    <!-- Intervals List -->
-    <div
-      v-for="(interval, index) in intervals"
-      :key="index"
-      class="flex items-center gap-2 flex-wrap sm:flex-nowrap"
-    >
-      <!-- Interval Name -->
-      <input
-        v-model="interval.name"
-        type="text"
-        placeholder="Interval Name"
-        class="flex-1 rounded-lg px-3 py-2 bg-white/50 border border-white/20 text-black placeholder-black/50 shadow-inner focus:ring-2 focus:ring-purple-400 focus:border-transparent"
-        :disabled="loading || isRunning"
-      />
+    <!-- Intervals Table -->
+    <table v-else class="table-auto w-full text-sm border-separate border-spacing-0 bg-white/30">
+      <thead>
+        <tr class="bg-gradient-to-r from-purple-500 to-blue-400 text-white">
+          <th class="px-2 py-1 text-left border-b border-dashed border-black/30">Name</th>
+          <th class="px-2 py-1 text-left border-b border-dashed border-black/30">HH</th>
+          <th class="px-2 py-1 text-left border-b border-dashed border-black/30">MM</th>
+          <th class="px-2 py-1 text-left border-b border-dashed border-black/30">SS</th>
+          <th class="px-2 py-1 text-left border-b border-dashed border-black/30">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(interval, index) in intervals" :key="index" class="hover:bg-gray-50 transition">
+          <!-- Name -->
+          <td class="px-2 py-1 border-b border-dashed border-black/30">
+            <input
+              v-model="interval.name"
+              type="text"
+              placeholder="Interval Name"
+              class="w-full rounded px-2 py-1 bg-white/50 border border-black/100 text-black placeholder-black/50 focus:ring-2 focus:ring-purple-400 focus:border-transparent"
+              :disabled="loading || isRunning"
+            />
+          </td>
 
-      <!-- Time Inputs -->
-      <div
-        class="flex gap-1 items-center rounded-lg bg-white/50 border border-white/20 shadow-inner px-2 py-1"
-      >
-        <!-- Hours -->
-        <div class="flex flex-col items-center">
-          <input
-            v-model.number="interval.hours"
-            type="number"
-            min="0"
-            class="w-12 text-center rounded bg-white/50 border border-white/20 shadow-inner text-black"
-            :disabled="loading || isRunning"
-            @input="updateSeconds(interval)"
-          />
-          <span class="text-xs text-black/70">HH</span>
-        </div>
+          <!-- Hours -->
+          <td class="px-2 py-1 border-b border-dashed border-black/30">
+            <input
+              v-model.number="interval.hours"
+              type="number"
+              min="0"
+              class="w-16 text-center rounded px-1 py-1 bg-white/50 border border-black/100 text-black shadow-inner"
+              :disabled="loading || isRunning"
+              @input="updateSeconds(interval)"
+            />
+          </td>
 
-        <span class="text-black/50">:</span>
+          <!-- Minutes -->
+          <td class="px-2 py-1 border-b border-dashed border-black/30">
+            <input
+              v-model.number="interval.minutes"
+              type="number"
+              min="0"
+              max="59"
+              class="w-16 text-center rounded px-1 py-1 bg-white/50 border border-black/100 text-black shadow-inner"
+              :disabled="loading || isRunning"
+              @input="updateSeconds(interval)"
+            />
+          </td>
 
-        <!-- Minutes -->
-        <div class="flex flex-col items-center">
-          <input
-            v-model.number="interval.minutes"
-            type="number"
-            min="0"
-            max="59"
-            class="w-12 text-center rounded bg-white/50 border border-white/20 shadow-inner text-black"
-            :disabled="loading || isRunning"
-            @input="updateSeconds(interval)"
-          />
-          <span class="text-xs text-black/70">MM</span>
-        </div>
+          <!-- Seconds -->
+          <td class="px-2 py-1 border-b border-dashed border-black/30">
+            <input
+              v-model.number="interval.secondsInput"
+              type="number"
+              min="0"
+              max="59"
+              class="w-16 text-center rounded px-1 py-1 bg-white/50 border border-black/100 text-black shadow-inner"
+              :disabled="loading || isRunning"
+              @input="updateSeconds(interval)"
+            />
+          </td>
 
-        <span class="text-black/50">:</span>
-
-        <!-- Seconds -->
-        <div class="flex flex-col items-center">
-          <input
-            v-model.number="interval.secondsInput"
-            type="number"
-            min="0"
-            max="59"
-            class="w-12 text-center rounded bg-white/50 border border-white/20 shadow-inner text-black"
-            :disabled="loading || isRunning"
-            @input="updateSeconds(interval)"
-          />
-          <span class="text-xs text-black/70">SS</span>
-        </div>
-      </div>
-
-      <!-- Remove Button -->
-      <button
-        :disabled="loading || isRunning"
-        class="bg-gradient-to-r from-purple-500 to-blue-400 text-white px-3 py-1 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
-        @click="removeInterval(index)"
-      >
-        ✕
-      </button>
-    </div>
+          <!-- Actions -->
+          <td class="px-2 py-1 border-b border-dashed border-black/30">
+            <button
+              :disabled="loading || isRunning"
+              class="bg-gradient-to-r from-purple-500 to-blue-400 text-white px-3 py-1 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50"
+              @click="removeInterval(index)"
+            >
+              ✕
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
     <!-- Action Buttons -->
     <div class="flex gap-4 pt-4 flex-wrap justify-center">
@@ -97,10 +98,7 @@
         class="bg-gradient-to-r from-purple-500 to-blue-400 text-white px-4 py-2 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
         @click="submitWorkout"
       >
-        <div
-          v-if="loading"
-          class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-        ></div>
+        <div v-if="loading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
         <span>{{ loading ? 'Saving...' : 'Save Workout' }}</span>
       </button>
     </div>
