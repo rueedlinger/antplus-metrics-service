@@ -77,7 +77,7 @@ BACKEND_PORT ?= 8000
 
 run-backend:
 	@echo "Running FastAPI app on http://127.0.0.1:$(BACKEND_PORT)"
-	uv run uvicorn app.api:app --reload --port $(BACKEND_PORT) --timeout-graceful-shutdown 1
+	uv run uvicorn app.api:app --reload --port $(BACKEND_PORT) --timeout-graceful-shutdown 1 --log-config logging.conf
 
 run-frontend:
 	@echo "Running Vite dev server on http://localhost:5173"

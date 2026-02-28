@@ -79,7 +79,7 @@ START_SCRIPT="start.sh"
 cat > "$START_SCRIPT" << 'EOF'
 #!/usr/bin/env bash
 echo "🚀 Starting server on port 8000..."
-uv run uvicorn app.api:app --reload --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 1
+uv run uvicorn app.api:app --reload --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 1  --log-config logging.conf
 EOF
 
 chmod +x "$START_SCRIPT"
