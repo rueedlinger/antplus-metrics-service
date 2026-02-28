@@ -11,9 +11,15 @@ This is a FastAPI and Vue application that provides:
 - Node
 
 ## Setup
-tbd
+  install python
+- install node
+- install git
+- run install.sh
+- start app with start.sh
 
-## Test INstall Script with Docker
+
+## Test
+### Test Install Script with Docker
 ```bash
 docker build --build-arg CACHE_BUST=$(date +%s) -t app:latest .
 docker run -it --rm -p 8000:8000 app:latest bash
