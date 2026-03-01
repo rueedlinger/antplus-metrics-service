@@ -48,9 +48,15 @@ cd ..
 # -----------------------
 echo "🐍 Setting up backend..."
 
-# Ensure Python 3.14+ is installed
+# Ensure Python is installed
 if ! command -v python3 >/dev/null; then
     echo "❌ Python3 is not installed."
+    exit 1
+fi
+
+# Ensure pip is installed
+if ! command -v pip3 >/dev/null; then
+    echo "❌ pip3 is not installed."
     exit 1
 fi
 
@@ -58,7 +64,7 @@ fi
 
 # Install uv if not installed
 if ! command -v uv >/dev/null; then
-    pip install uv
+    pip3 install uv
 fi
 
 echo "Python version: $(python3 --version)"
