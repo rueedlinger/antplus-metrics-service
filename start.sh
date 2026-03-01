@@ -15,8 +15,10 @@ echo "   Reload: ${RELOAD}"
 echo "   Graceful shutdown timeout: ${TIMEOUT_GRACEFUL_SHUTDOWN}s"
 echo "   Log config: ${LOG_CONFIG}"
 
+source .venv/bin/activate
+
 CMD=(
-  uv run uvicorn "${APP_MODULE}"
+  uvicorn "${APP_MODULE}"
   --host "${HOST}"
   --port "${PORT}"
   --timeout-graceful-shutdown "${TIMEOUT_GRACEFUL_SHUTDOWN}"

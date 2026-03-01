@@ -54,20 +54,26 @@ if ! command -v python3 >/dev/null; then
     exit 1
 fi
 
-# Ensure pip is installed
-if ! command -v pip3 >/dev/null; then
-    echo "❌ pip3 is not installed."
-    exit 1
-fi
-
-# python3 -m pip install --upgrade pip
-
-# Install uv if not installed
-if ! command -v uv >/dev/null; then
-    pip3 install uv
-fi
-
 echo "Python version: $(python3 --version)"
+
+# Create a virtual environment if it doesn't exist
+VENV_DIR=".venv"
+if [ ! -d "$VENV_DIR" ]; then
+    echo "⚡ Creating virtual environment..."
+    python3 -m venv "$VENV_DIR"
+fi
+
+# Activate the virtual environment
+source "$VENV_DIR/bin/activate"
+
+
+# Upgrade pip in venv
+pip install --upgrade pip
+echo "pip version: $(pip --version)"
+
+
+# Install uv in venv
+pip install uv
 
 # Sync all dependencies via uv (Poetry alternative)
 uv sync --all-groups
